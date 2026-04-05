@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Rajdhani, Inter } from "next/font/google";
 import "./globals.css";
 import { TransmissionProvider } from "@/context/TransmissionContext";
