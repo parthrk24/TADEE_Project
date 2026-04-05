@@ -3,7 +3,7 @@
 
 import { useTransmission } from "@/context/TransmissionContext";
 import { ComplexNumber } from "@/types/transmission";
-
+const { state, setStep, clearResults } = useTransmission();
 function fmt(n: number, decimals = 4): string {
   return isNaN(n) ? "—" : n.toFixed(decimals);
 }
@@ -143,7 +143,10 @@ ${line}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white tracking-wide">Results</h2>
         <button
-          onClick={() => setStep(1)}
+          onClick={() => {
+            clearResults();
+            setStep(1);
+          }}
           className="text-sm text-purple-300 hover:text-purple-100 
                      transition hover:underline"
         >
