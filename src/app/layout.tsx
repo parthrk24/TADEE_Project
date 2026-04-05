@@ -1,9 +1,9 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Rajdhani, Inter } from "next/font/google";
 import "./globals.css";
 import { TransmissionProvider } from "@/context/TransmissionContext";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const rajdhani = Rajdhani({
   weight: ["400", "500", "600", "700"],
@@ -35,8 +35,8 @@ export default function RootLayout({
           {/* Dark purple overlay */}
           <div className="absolute inset-0 bg-purple-950/60" />
         </div>
-
         <TransmissionProvider>{children}</TransmissionProvider>
+        <SpeedInsights /> {}
       </body>
     </html>
   );
