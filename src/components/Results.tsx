@@ -142,16 +142,6 @@ ${line}
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white tracking-wide">Results</h2>
-        <button
-          onClick={() => {
-            clearResults();
-            setStep(1);
-          }}
-          className="text-sm text-purple-300 hover:text-purple-100 
-                     transition hover:underline"
-        >
-          ← Edit Inputs
-        </button>
       </div>
 
       {/* Line Parameters */}
