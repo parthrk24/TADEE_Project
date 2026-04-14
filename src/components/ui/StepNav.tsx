@@ -14,9 +14,70 @@ interface StepNavProps {
   onCalculate?: () => void;
 }
 
+function validateStep(
+  step: number,
+  inputs: ReturnType<typeof useTransmission>["state"]["inputs"],
+): string | null {
+  switch (step) {
+    case 1:
+      if (inputs.numStrands < 1) return "Number of strands must be at least 1.";
+      if (inputs.strandDiameter <= 0)
+        return "Strand diameter must be greater than 0.";
+      if (inputs.subConductorResistance <= 0)
+        return "Resistance must be greater than 0.";
+      if (inputs.bundleSpacing <= 0)
+        return "Bundle spacing must be greater than 0.";
+      return null;
+    case 2:
+      if (inputs.spacingAB <= 0) return "Spacing D_AB must be greater than 0.";
+      if (inputs.spacingType === "unsymmetrical") {
+        if (inputs.spacingBC <= 0)
+          return "Spacing D_BC must be greater than 0.";
+        if (inputs.spacingCA <= 0)
+          return "Spacing D_CA must be greater than 0.";
+      }
+      return null;
+    case 3:
+      if (inputs.lineLength <= 0) return "Line length must be greater than 0.";
+      if (inputs.receivingEndLoad <= 0)
+        return "Receiving end load must be greater than 0.";
+      if (inputs.powerFactor <= 0 || inputs.powerFactor > 1)
+        return "Power factor must be between 0 and 1.";
+      if (inputs.nominalVoltage <= 0)
+        return "Nominal voltage must be greater than 0.";
+      if (inputs.frequency <= 0) return "Frequency must be greater than 0.";
+      return null;
+    default:
+      return null;
+  }
+}
+
 export default function StepNav({ onCalculate }: StepNavProps) {
   const { state, setStep } = useTransmission();
-  const { currentStep } = state;
+  const { currentStep, inputs } = state;
+
+  function handleNext() {
+    const error = validateStep(currentStep, inputs);
+    if (error) {
+      alert(error);
+      return;
+    }
+    setStep(currentStep + 1);
+  }
+
+  function handleStepClick(targetStep: number) {
+    // Validate all steps between current and target when jumping forward
+    if (targetStep > currentStep) {
+      for (let s = currentStep; s < targetStep; s++) {
+        const error = validateStep(s, inputs);
+        if (error) {
+          alert(`Step ${s}: ${error}`);
+          return;
+        }
+      }
+    }
+    setStep(targetStep);
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -24,9 +85,8 @@ export default function StepNav({ onCalculate }: StepNavProps) {
       <div className="flex items-center justify-between">
         {STEPS.map((step, idx) => (
           <div key={step.id} className="flex items-center flex-1">
-            {/* Circle */}
             <button
-              onClick={() => setStep(step.id)}
+              onClick={() => handleStepClick(step.id)}
               className={`w-8 h-8 rounded-full text-sm font-semibold 
                           flex items-center justify-center transition
                           ${
@@ -40,7 +100,6 @@ export default function StepNav({ onCalculate }: StepNavProps) {
               {currentStep > step.id ? "✓" : step.id}
             </button>
 
-            {/* Label */}
             <span
               className={`ml-1 text-xs hidden sm:block
                               ${
@@ -52,7 +111,6 @@ export default function StepNav({ onCalculate }: StepNavProps) {
               {step.label}
             </span>
 
-            {/* Connector line */}
             {idx < STEPS.length - 1 && (
               <div
                 className={`flex-1 h-0.5 mx-2 rounded-full
@@ -82,7 +140,7 @@ export default function StepNav({ onCalculate }: StepNavProps) {
 
         {currentStep < 4 ? (
           <button
-            onClick={() => setStep(currentStep + 1)}
+            onClick={handleNext}
             className="px-4 py-2 rounded-lg bg-purple-600 text-white 
                        text-sm font-medium hover:bg-purple-500 
                        transition shadow-lg shadow-purple-500/30"
