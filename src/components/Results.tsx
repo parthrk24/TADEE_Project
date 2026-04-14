@@ -3,7 +3,7 @@
 
 import { useTransmission } from "@/context/TransmissionContext";
 import { ComplexNumber } from "@/types/transmission";
-const { state, setStep, clearResults } = useTransmission();
+
 function fmt(n: number, decimals = 4): string {
   return isNaN(n) ? "—" : n.toFixed(decimals);
 }
@@ -54,7 +54,7 @@ function Section({
 }
 
 export default function Results() {
-  const { state, setStep } = useTransmission();
+  const { state, setStep, clearResults } = useTransmission();
   const { results, inputs } = state;
 
   if (!results) return null;
@@ -113,14 +113,14 @@ ${line}
     C = ${fmtComplex(r.abcd.C)} S
     D = ${fmtComplex(r.abcd.D)}
 
-7.  Sending End Voltage  : ${fmt(r.sendingVoltage, 4)} kV
-8.  Sending End Current  : ${fmt(r.sendingCurrent, 4)} A
-9.  Charging Current     : ${fmt(r.chargingCurrent, 4)} A
-10. Voltage Regulation   : ${fmt(r.voltageRegulation, 4)} %
-11. Power Loss           : ${fmt(r.powerLoss, 4)} MW
-12. Transmission Eff.    : ${fmt(r.efficiency, 4)} %
-13. Surge Impedance      : ${fmt(r.surgeImpedance, 4)} Ω
-14. SIL                  : ${fmt(r.surgeImpedanceLoading, 4)} MW
+6.  Sending End Voltage  : ${fmt(r.sendingVoltage, 4)} kV
+7.  Sending End Current  : ${fmt(r.sendingCurrent, 4)} A
+8.  Charging Current     : ${fmt(r.chargingCurrent, 4)} A
+9.  Voltage Regulation   : ${fmt(r.voltageRegulation, 4)} %
+10. Power Loss           : ${fmt(r.powerLoss, 4)} MW
+11. Transmission Eff.    : ${fmt(r.efficiency, 4)} %
+12. Surge Impedance      : ${fmt(r.surgeImpedance, 4)} Ω
+13. SIL                  : ${fmt(r.surgeImpedanceLoading, 4)} MW
 
 ${line}
     `.trim();
@@ -142,6 +142,15 @@ ${line}
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white tracking-wide">Results</h2>
+        <button
+          onClick={() => {
+            clearResults();
+            setStep(4);
+          }}
+          className="text-xs text-purple-300/50 hover:text-purple-300 transition"
+        >
+          ← Edit Inputs
+        </button>
       </div>
 
       {/* Line Parameters */}
