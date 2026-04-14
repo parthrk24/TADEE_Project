@@ -235,10 +235,10 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
   const Vr: ComplexNumber = { re: Vr_mag, im: 0 }; // reference phasor
 
   // Ir
-  const S_3ph =
-    (receivingEndLoad * 1e6) / (Math.sqrt(3) * nominalVoltage * 1000);
   const phi = Math.acos(powerFactor);
-  const Ir_mag = S_3ph; // magnitude in A
+  const Ir_mag =
+    (receivingEndLoad * 1e6) /
+    (Math.sqrt(3) * nominalVoltage * 1000 * powerFactor); // magnitude in A
   // Lagging: I = Ir*(cos(phi) - j*sin(phi)), Leading: + j*sin(phi)
   const Ir: ComplexNumber = {
     re: Ir_mag * powerFactor,
@@ -322,11 +322,9 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
   // Charging current (nominal-pi / distributed only)
   // Ic = Y/2 * Vs  (sending end)
   const Y_half: ComplexNumber = { re: Y.re / 2, im: Y.im / 2 };
-  const Ic_s = cmul(Y_half, Vs);
-  const chargingCurrent = cmag(Ic_s);
+  const chargingCurrent = lineModel === "short" ? 0 : cmag(cmul(Y_half, Vs));
 
   // Voltage regulation
-  const Vs_no_load = Vs_mag_phase; // at no load Vr would equal Vs
   const VR = ((Vs_mag_phase - Vr_mag) / Vr_mag) * 100;
 
   // Power loss
