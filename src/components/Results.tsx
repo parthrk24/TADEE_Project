@@ -4,6 +4,7 @@
 import { useTransmission } from "@/context/TransmissionContext";
 import { ComplexNumber } from "@/types/transmission";
 import { formatPolar } from "@/lib/calculations";
+import { Document, Packer, Paragraph, TextRun } from "docx";
 
 function fmt(n: number, decimals = 4): string {
   return isNaN(n) ? "—" : n.toFixed(decimals);
@@ -57,73 +58,93 @@ export default function Results() {
 
   const r = results;
 
-  // ── Generate report text ─────────────────────────────────────
-  function generateReport(): string {
-    const line = "─".repeat(55);
+  // ── Generate report lines ────────────────────────────────────
+  function generateReportLines(): string[] {
+    const line = "\u2500".repeat(55);
 
-    return `
-${line}
-  TRANSMISSION LINE ANALYSIS REPORT
-  EEPC17 - NIT Tiruchirappalli
-${line}
-
-Developed by:
-  1. Parth Kurade — 107124074
-  2. Kumar Shubangam Verma — 107124056
-  3. Pranav Jha — 107124080
-
-Submitted on: 18-04-2026
-${line}
-
-INPUT PARAMETERS
-  Line Length          : ${inputs.lineLength} km
-  Receiving End Load   : ${inputs.receivingEndLoad} MW
-  Power Factor         : ${inputs.powerFactor} (${inputs.pfLag ? "Lagging" : "Leading"})
-  Nominal Voltage      : ${inputs.nominalVoltage} kV
-  Frequency            : ${inputs.frequency} Hz
-  Spacing Type         : ${inputs.spacingType}
-  Line Model           : ${inputs.lineModel}
-  Sub-conductors/Bundle: ${inputs.numSubConductors}
-  Bundle Spacing       : ${inputs.bundleSpacing} mm
-  No. of Strands       : ${inputs.numStrands}
-  Strand Diameter      : ${inputs.strandDiameter} mm
-  Sub-cond Resistance  : ${inputs.subConductorResistance} Ω/km
-
-${line}
-OUTPUT RESULTS
-${line}
-
-1.  Inductance/phase/km  : ${fmt(r.inductancePerKm, 6)} H/km
-2.  Capacitance/phase/km : ${fmt(r.capacitancePerKm, 6)} F/km
-3.  Inductive Reactance  : ${fmt(r.inductiveReactance, 4)} Ω (per phase)
-4.  Capacitive Reactance : ${fmt(r.capacitiveReactance, 4)} Ω (per phase)
-
-5.  ABCD Parameters:
-    A = ${formatPolar(r.abcd.A)}
-    B = ${formatPolar(r.abcd.B)} Ω
-    C = ${formatPolar(r.abcd.C, 6, 4)} S
-    D = ${formatPolar(r.abcd.D)}
-
-6.  Sending End Voltage  : ${formatPolar(r.sendingVoltage, 4, 2)} kV (line to line)
-7.  Sending End Current  : ${formatPolar(r.sendingCurrent, 4, 2)} A
-8.  Charging Current     : ${formatPolar(r.chargingCurrent, 4, 2)} A (per phase)
-9.  Voltage Regulation   : ${fmt(r.voltageRegulation, 4)} %
-10. Total Power Loss           : ${fmt(r.powerLoss, 4)} MW
-11. Transmission Efficiency    : ${fmt(r.efficiency, 4)} %
-12. Surge Impedance      : ${fmt(r.surgeImpedance, 4)} Ω
-13. SIL                  : ${fmt(r.surgeImpedanceLoading, 4)} MW
-
-${line}
-    `.trim();
+    return [
+      line,
+      "  TRANSMISSION LINE ANALYSIS REPORT",
+      "  EEPC17 - NIT Tiruchirappalli",
+      line,
+      "",
+      "Developed by:",
+      "  1. Parth Kurade \u2014 107124074",
+      "  2. Kumar Shubangam Verma \u2014 107124056",
+      "  3. Pranav Jha \u2014 107124080",
+      "",
+      "Submitted on: 18-04-2026",
+      line,
+      "",
+      "INPUT PARAMETERS",
+      `  Line Length          : ${inputs.lineLength} km`,
+      `  Receiving End Load   : ${inputs.receivingEndLoad} MW`,
+      `  Power Factor         : ${inputs.powerFactor} (${inputs.pfLag ? "Lagging" : "Leading"})`,
+      `  Nominal Voltage      : ${inputs.nominalVoltage} kV`,
+      `  Frequency            : ${inputs.frequency} Hz`,
+      `  Spacing Type         : ${inputs.spacingType}`,
+      `  Line Model           : ${inputs.lineModel}`,
+      `  Sub-conductors/Bundle: ${inputs.numSubConductors}`,
+      `  Bundle Spacing       : ${inputs.bundleSpacing} mm`,
+      `  No. of Strands       : ${inputs.numStrands}`,
+      `  Strand Diameter      : ${inputs.strandDiameter} mm`,
+      `  Sub-cond Resistance  : ${inputs.subConductorResistance} \u03A9/km`,
+      "",
+      line,
+      "OUTPUT RESULTS",
+      line,
+      "",
+      `1.  Inductance/phase/km  : ${(r.inductancePerKm * 1000).toFixed(4)} x 10^-3 H/km`,
+      `2.  Capacitance/phase/km : ${(r.capacitancePerKm * 1e9).toFixed(4)} x 10^-9 F/km`,
+      `3.  Inductive Reactance  : ${fmt(r.inductiveReactance, 4)} \u03A9 (per phase)`,
+      `4.  Capacitive Reactance : ${fmt(r.capacitiveReactance, 4)} \u03A9 (per phase)`,
+      "",
+      "5.  ABCD Parameters:",
+      `    A = ${formatPolar(r.abcd.A)}`,
+      `    B = ${formatPolar(r.abcd.B)} \u03A9`,
+      `    C = ${formatPolar(r.abcd.C, 6, 4)} S`,
+      `    D = ${formatPolar(r.abcd.D)}`,
+      "",
+      `6.  Sending End Voltage        : ${formatPolar(r.sendingVoltage, 4, 2)} kV (L - L)`,
+      `7.  Sending End Current        : ${formatPolar(r.sendingCurrent, 4, 2)} A`,
+      `8.  Charging Current           : ${formatPolar(r.chargingCurrent, 4, 2)} A (per phase)`,
+      `9.  Voltage Regulation         : ${fmt(r.voltageRegulation, 4)} %`,
+      `10. Total Power Loss           : ${fmt(r.powerLoss, 4)} MW`,
+      `11. Transmission Efficiency    : ${fmt(r.efficiency, 4)} %`,
+      `12. Surge Impedance            : ${fmt(r.surgeImpedance, 4)} \u03A9`,
+      `13. SIL                        : ${fmt(r.surgeImpedanceLoading, 4)} MW`,
+      "",
+      line,
+    ];
   }
 
-  function downloadReport() {
-    const text = generateReport();
-    const blob = new Blob([text], { type: "text/plain" });
+  async function downloadReport() {
+    const lines = generateReportLines();
+
+    const doc = new Document({
+      sections: [
+        {
+          children: lines.map(
+            (line) =>
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: line,
+                    font: "Arial",
+                    size: 20, // 10pt (half-points)
+                  }),
+                ],
+              }),
+          ),
+        },
+      ],
+    });
+
+    const blob = await Packer.toBlob(doc);
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "transmission_line_report.doc";
+    a.download = "transmission_line_report.docx";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -159,12 +180,12 @@ ${line}
         <ResultRow
           label="Inductive Reactance"
           value={fmt(r.inductiveReactance)}
-          unit="Ω"
+          unit="Ω (per phase)"
         />
         <ResultRow
           label="Capacitive Reactance"
           value={fmt(r.capacitiveReactance)}
-          unit="Ω"
+          unit="Ω (per phase)"
         />
       </Section>
 
@@ -181,12 +202,12 @@ ${line}
         <ResultRow
           label="Sending End Voltage"
           value={formatPolar(r.sendingVoltage, 4, 2)}
-          unit="kV"
+          unit="kV (L - L)"
         />
         <ResultRow
           label="Sending End Current"
           value={formatPolar(r.sendingCurrent, 4, 2)}
-          unit="A"
+          unit="A (per phase)"
         />
         <ResultRow
           label="Charging Current"
@@ -248,7 +269,7 @@ ${line}
                    font-semibold text-sm hover:bg-purple-500 transition
                    shadow-lg shadow-purple-500/30"
       >
-        ⬇ Download Report (.doc)
+        ⬇ Download Report (.docx)
       </button>
     </div>
   );
