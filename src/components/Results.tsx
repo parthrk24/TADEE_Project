@@ -4,7 +4,18 @@
 import { useTransmission } from "@/context/TransmissionContext";
 import { ComplexNumber } from "@/types/transmission";
 import { formatPolar } from "@/lib/calculations";
-import { Document, Packer, Paragraph, TextRun } from "docx";
+
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+} from "docx";
 
 function fmt(n: number, decimals = 4): string {
   return isNaN(n) ? "—" : n.toFixed(decimals);
@@ -59,83 +70,150 @@ export default function Results() {
   const r = results;
 
   // ── Generate report lines ────────────────────────────────────
-  function generateReportLines(): string[] {
-    const line = "\u2500".repeat(55);
-
-    return [
-      line,
-      "  TRANSMISSION LINE ANALYSIS REPORT",
-      "  EEPC17 - NIT Tiruchirappalli",
-      line,
-      "",
-      "Developed by:",
-      "  1. Parth Kurade \u2014 107124074",
-      "  2. Kumar Shubangam Verma \u2014 107124056",
-      "  3. Pranav Jha \u2014 107124080",
-      "",
-      "Submitted on: 18-04-2026",
-      line,
-      "",
-      "INPUT PARAMETERS",
-      `  Line Length          : ${inputs.lineLength} km`,
-      `  Receiving End Load   : ${inputs.receivingEndLoad} MW`,
-      `  Power Factor         : ${inputs.powerFactor} (${inputs.pfLag ? "Lagging" : "Leading"})`,
-      `  Nominal Voltage      : ${inputs.nominalVoltage} kV`,
-      `  Frequency            : ${inputs.frequency} Hz`,
-      `  Spacing Type         : ${inputs.spacingType}`,
-      `  Line Model           : ${inputs.lineModel}`,
-      `  Sub-conductors/Bundle: ${inputs.numSubConductors}`,
-      `  Bundle Spacing       : ${inputs.bundleSpacing} mm`,
-      `  No. of Strands       : ${inputs.numStrands}`,
-      `  Strand Diameter      : ${inputs.strandDiameter} mm`,
-      `  Sub-cond Resistance  : ${inputs.subConductorResistance} \u03A9/km`,
-      "",
-      line,
-      "OUTPUT RESULTS",
-      line,
-      "",
-      `1.  Inductance/phase/km  : ${(r.inductancePerKm * 1000).toFixed(4)} x 10^-3 H/km`,
-      `2.  Capacitance/phase/km : ${(r.capacitancePerKm * 1e9).toFixed(4)} x 10^-9 F/km`,
-      `3.  Inductive Reactance  : ${fmt(r.inductiveReactance, 4)} \u03A9 (per phase)`,
-      `4.  Capacitive Reactance : ${fmt(r.capacitiveReactance, 4)} \u03A9 (per phase)`,
-      "",
-      "5.  ABCD Parameters:",
-      `    A = ${formatPolar(r.abcd.A)}`,
-      `    B = ${formatPolar(r.abcd.B)} \u03A9`,
-      `    C = ${formatPolar(r.abcd.C, 6, 4)} S`,
-      `    D = ${formatPolar(r.abcd.D)}`,
-      "",
-      `6.  Sending End Voltage        : ${formatPolar(r.sendingVoltage, 4, 2)} kV (L - L)`,
-      `7.  Sending End Current        : ${formatPolar(r.sendingCurrent, 4, 2)} A`,
-      `8.  Charging Current           : ${formatPolar(r.chargingCurrent, 4, 2)} A (per phase)`,
-      `9.  Voltage Regulation         : ${fmt(r.voltageRegulation, 4)} %`,
-      `10. Total Power Loss           : ${fmt(r.powerLoss, 4)} MW`,
-      `11. Transmission Efficiency    : ${fmt(r.efficiency, 4)} %`,
-      `12. Surge Impedance            : ${fmt(r.surgeImpedance, 4)} \u03A9`,
-      `13. SIL                        : ${fmt(r.surgeImpedanceLoading, 4)} MW`,
-      "",
-      line,
-    ];
-  }
 
   async function downloadReport() {
-    const lines = generateReportLines();
+    const noBorder = {
+      top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+    };
+
+    function textRun(text: string, bold = false) {
+      return new TextRun({ text, font: "Arial", size: 20, bold });
+    }
+
+    function textPara(text: string, bold = false) {
+      return new Paragraph({ children: [textRun(text, bold)] });
+    }
+
+    function tableRow(label: string, value: string) {
+      return new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 40, type: WidthType.PERCENTAGE },
+            borders: noBorder,
+            children: [new Paragraph({ children: [textRun(label)] })],
+          }),
+          new TableCell({
+            width: { size: 60, type: WidthType.PERCENTAGE },
+            borders: noBorder,
+            children: [new Paragraph({ children: [textRun(": " + value)] })],
+          }),
+        ],
+      });
+    }
+
+    const divider = "\u2500".repeat(55);
 
     const doc = new Document({
       sections: [
         {
-          children: lines.map(
-            (line) =>
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: line,
-                    font: "Arial",
-                    size: 20, // 10pt (half-points)
-                  }),
-                ],
-              }),
-          ),
+          children: [
+            textPara(divider),
+            textPara("  TRANSMISSION LINE ANALYSIS REPORT", true),
+            textPara("  EEPC17 - NIT Tiruchirappalli"),
+            textPara(divider),
+            textPara(""),
+            textPara("Developed by:"),
+            textPara("  1. Parth Kurade \u2014 107124074"),
+            textPara("  2. Kumar Shubangam Verma \u2014 107124056"),
+            textPara("  3. Pranav Jha \u2014 107124080"),
+            textPara(""),
+            textPara("Submitted on: 18-04-2026"),
+            textPara(divider),
+            textPara(""),
+            textPara("INPUT PARAMETERS", true),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: noBorder,
+              rows: [
+                tableRow("  Line Length", `${inputs.lineLength} km`),
+                tableRow(
+                  "  Receiving End Load",
+                  `${inputs.receivingEndLoad} MW`,
+                ),
+                tableRow(
+                  "  Power Factor",
+                  `${inputs.powerFactor} (${inputs.pfLag ? "Lagging" : "Leading"})`,
+                ),
+                tableRow("  Nominal Voltage", `${inputs.nominalVoltage} kV`),
+                tableRow("  Frequency", `${inputs.frequency} Hz`),
+                tableRow("  Spacing Type", `${inputs.spacingType}`),
+                tableRow("  Line Model", `${inputs.lineModel}`),
+                tableRow(
+                  "  Sub-conductors/Bundle",
+                  `${inputs.numSubConductors}`,
+                ),
+                tableRow("  Bundle Spacing", `${inputs.bundleSpacing} mm`),
+                tableRow("  No. of Strands", `${inputs.numStrands}`),
+                tableRow("  Strand Diameter", `${inputs.strandDiameter} mm`),
+                tableRow(
+                  "  Sub-cond Resistance",
+                  `${inputs.subConductorResistance} \u03A9/km`,
+                ),
+              ],
+            }),
+            textPara(""),
+            textPara(divider),
+            textPara("OUTPUT RESULTS", true),
+            textPara(divider),
+            textPara(""),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: noBorder,
+              rows: [
+                tableRow(
+                  "1.  Inductance/phase/km",
+                  `${(r.inductancePerKm * 1000).toFixed(4)} x 10^-3 H/km`,
+                ),
+                tableRow(
+                  "2.  Capacitance/phase/km",
+                  `${(r.capacitancePerKm * 1e9).toFixed(4)} x 10^-9 F/km`,
+                ),
+                tableRow(
+                  "3.  Inductive Reactance",
+                  `${fmt(r.inductiveReactance, 4)} \u03A9 (per phase)`,
+                ),
+                tableRow(
+                  "4.  Capacitive Reactance",
+                  `${fmt(r.capacitiveReactance, 4)} \u03A9 (per phase)`,
+                ),
+                tableRow("5a. A", `${formatPolar(r.abcd.A)}`),
+                tableRow("5b. B", `${formatPolar(r.abcd.B)} \u03A9`),
+                tableRow("5c. C", `${formatPolar(r.abcd.C, 6, 4)} S`),
+                tableRow("5d. D", `${formatPolar(r.abcd.D)}`),
+                tableRow(
+                  "6.  Sending End Voltage",
+                  `${formatPolar(r.sendingVoltage, 4, 2)} kV (L - L)`,
+                ),
+                tableRow(
+                  "7.  Sending End Current",
+                  `${formatPolar(r.sendingCurrent, 4, 2)} A`,
+                ),
+                tableRow(
+                  "8.  Charging Current",
+                  `${formatPolar(r.chargingCurrent, 4, 2)} A (per phase)`,
+                ),
+                tableRow(
+                  "9.  Voltage Regulation",
+                  `${fmt(r.voltageRegulation, 4)} %`,
+                ),
+                tableRow("10. Total Power Loss", `${fmt(r.powerLoss, 4)} MW`),
+                tableRow(
+                  "11. Transmission Efficiency",
+                  `${fmt(r.efficiency, 4)} %`,
+                ),
+                tableRow(
+                  "12. Surge Impedance",
+                  `${fmt(r.surgeImpedance, 4)} \u03A9`,
+                ),
+                tableRow("13. SIL", `${fmt(r.surgeImpedanceLoading, 4)} MW`),
+              ],
+            }),
+            textPara(""),
+            textPara(divider),
+          ],
         },
       ],
     });
@@ -148,7 +226,6 @@ export default function Results() {
     a.click();
     URL.revokeObjectURL(url);
   }
-
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
