@@ -56,11 +56,11 @@ export interface TransmissionResults {
   abcd: ABCDParams;
 
   // Sending end
-  sendingVoltage: number; // kV (line-to-line)
-  sendingCurrent: number; // A
-
+  sendingVoltage: ComplexNumber; // kV (line-to-line)
+  sendingCurrent: ComplexNumber; // A
+  receivingCurrent: ComplexNumber;
   // Charging current
-  chargingCurrent: number; // A
+  chargingCurrent: ComplexNumber; // A
 
   // Performance
   voltageRegulation: number; // %

@@ -8,7 +8,9 @@ import {
 } from "@/types/transmission";
 
 // ── Complex Number Math ──────────────────────────────────────────
-
+function czero(a: number): ComplexNumber {
+  return { re: a, im: 0 };
+}
 function cadd(a: ComplexNumber, b: ComplexNumber): ComplexNumber {
   return { re: a.re + b.re, im: a.im + b.im };
 }
@@ -61,6 +63,32 @@ function csqrt(a: ComplexNumber): ComplexNumber {
   const mag = Math.sqrt(cmag(a));
   const ang = Math.atan2(a.im, a.re) / 2;
   return { re: mag * Math.cos(ang), im: mag * Math.sin(ang) };
+}
+
+// ── Polar Format Utilities ───────────────────────────────────────
+
+export function toPolar(c: ComplexNumber): {
+  magnitude: number;
+  angle: number;
+} {
+  return {
+    magnitude: cmag(c),
+    angle: cang(c),
+  };
+}
+
+/**
+ * Formats a complex number as a polar string: "123.4500 ∠ 30.00°"
+ * @param c - Complex number
+ * @param magDecimals - Decimal places for magnitude (default 4)
+ * @param angDecimals - Decimal places for angle (default 2)
+ */
+export function formatPolar(
+  c: ComplexNumber,
+  magDecimals = 4,
+  angDecimals = 2,
+): string {
+  return `${cmag(c).toFixed(magDecimals)} ∠ ${cang(c).toFixed(angDecimals)}°`;
 }
 
 // ── GMR Calculation ──────────────────────────────────────────────
@@ -185,10 +213,11 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
 
   let overallRadius: number;
   if (numStrands === 1) overallRadius = r_strand;
-  else if (numStrands <= 7) overallRadius = 3 * r_strand;
-  else if (numStrands <= 19) overallRadius = 5 * r_strand;
-  else if (numStrands <= 37) overallRadius = 7 * r_strand;
-  else overallRadius = 9 * r_strand;
+  else if (numStrands === 7) overallRadius = 3 * r_strand;
+  else if (numStrands === 19) overallRadius = 5 * r_strand;
+  else if (numStrands === 37) overallRadius = 7 * r_strand;
+  else if (numStrands === 61) overallRadius = 9 * r_strand;
+  else overallRadius = 11 * r_strand;
 
   const subGMR = calcSubConductorGMR(numStrands, strandDiameter);
 
@@ -235,10 +264,10 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
   const Vr: ComplexNumber = { re: Vr_mag, im: 0 }; // reference phasor
 
   // Ir
-  const S_3ph =
-    (receivingEndLoad * 1e6) / (Math.sqrt(3) * nominalVoltage * 1000);
   const phi = Math.acos(powerFactor);
-  const Ir_mag = S_3ph; // magnitude in A
+  const Ir_mag =
+    (receivingEndLoad * 1e6) /
+    (Math.sqrt(3) * nominalVoltage * 1000 * powerFactor); // magnitude in A
   // Lagging: I = Ir*(cos(phi) - j*sin(phi)), Leading: + j*sin(phi)
   const Ir: ComplexNumber = {
     re: Ir_mag * powerFactor,
@@ -317,17 +346,14 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
   // ── 8. Results ─────────────────────────────────────────────────
   const Vs_mag_phase = cmag(Vs); // phase voltage (V)
   const Vs_line_kV = (Vs_mag_phase * Math.sqrt(3)) / 1000; // line voltage (kV)
+  const sendingVoltage = cdiv(cmul(Vs, czero(Math.sqrt(3))), czero(1000));
   const Is_mag = cmag(Is); // sending current (A)
-
+  const Vs_by_A = cmag(Vs) / cmag(abcd.A);
   // Charging current (nominal-pi / distributed only)
-  // Ic = Y/2 * Vs  (sending end)
-  const Y_half: ComplexNumber = { re: Y.re / 2, im: Y.im / 2 };
-  const Ic_s = cmul(Y_half, Vs);
-  const chargingCurrent = cmag(Ic_s);
+  const chargingCurrent = lineModel === "short" ? czero(0) : cmul(abcd.C, Vr);
 
   // Voltage regulation
-  const Vs_no_load = Vs_mag_phase; // at no load Vr would equal Vs
-  const VR = ((Vs_mag_phase - Vr_mag) / Vr_mag) * 100;
+  const VR = ((Vs_by_A - Vr_mag) / Vr_mag) * 100;
 
   // Power loss
   const P_send =
@@ -355,8 +381,9 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
     inductiveReactance: XL,
     capacitiveReactance: XC,
     abcd,
-    sendingVoltage: Vs_line_kV,
-    sendingCurrent: Is_mag,
+    sendingVoltage,
+    sendingCurrent: Is,
+    receivingCurrent: Ir,
     chargingCurrent,
     voltageRegulation: VR,
     powerLoss,

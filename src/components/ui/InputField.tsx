@@ -1,5 +1,6 @@
-// src/components/ui/InputField.tsx
 "use client";
+
+import { useState, useEffect } from "react";
 
 interface InputFieldProps {
   label: string;
@@ -24,6 +25,32 @@ export default function InputField({
   step,
   hint,
 }: InputFieldProps) {
+  const [localValue, setLocalValue] = useState(String(value));
+
+  // Sync if parent value changes (e.g. reset)
+  useEffect(() => {
+    setLocalValue(String(value));
+  }, [value]);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    setLocalValue(raw); // always allow typing freely
+
+    // Only propagate when there's a real parseable value
+    if (raw !== "" && raw !== "-" && !raw.endsWith(".")) {
+      onChange(raw);
+    }
+  }
+
+  function handleBlur() {
+    // On blur, if empty or invalid fall back to the last good parent value
+    if (localValue === "" || isNaN(Number(localValue))) {
+      setLocalValue(String(value));
+    } else {
+      onChange(localValue);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <label className="text-sm font-medium text-purple-100">
@@ -34,8 +61,9 @@ export default function InputField({
       </label>
       <input
         type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={localValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
         min={min}
         max={max}
         step={step}
