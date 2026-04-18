@@ -187,10 +187,11 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
 
   let overallRadius: number;
   if (numStrands === 1) overallRadius = r_strand;
-  else if (numStrands <= 7) overallRadius = 3 * r_strand;
-  else if (numStrands <= 19) overallRadius = 5 * r_strand;
-  else if (numStrands <= 37) overallRadius = 7 * r_strand;
-  else overallRadius = 9 * r_strand;
+  else if (numStrands === 7) overallRadius = 3 * r_strand;
+  else if (numStrands === 19) overallRadius = 5 * r_strand;
+  else if (numStrands === 37) overallRadius = 7 * r_strand;
+  else if (numStrands === 61) overallRadius = 9 * r_strand;
+  else overallRadius = 11 * r_strand;
 
   const subGMR = calcSubConductorGMR(numStrands, strandDiameter);
 
@@ -216,7 +217,7 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
 
   // ── 5. Line parameters ─────────────────────────────────────────
   // Resistance per phase (parallel sub-conductors)
-  const R_per_km = subConductorResistance * numSubConductors; // Ω/km
+  const R_per_km = subConductorResistance / numSubConductors; // Ω/km
   const R_total = R_per_km * lineLength; // Ω
 
   const L_total = inductancePerKm * lineLength; // H

@@ -20,12 +20,20 @@ export default function Step1_ConductorParams() {
         </p>
       </div>
 
-      <InputField
+      <SelectField
         label="Number of Strands per Sub-conductor"
         value={inputs.numStrands}
-        onChange={(v) => updateInput({ numStrands: Number(v) })}
-        min={1}
-        hint="e.g. 7, 19, 37 for standard ACSR"
+        onChange={(v) =>
+          updateInput({ numStrands: Number(v) as 1 | 7 | 19 | 37 | 61 | 91 })
+        }
+        options={[
+          { label: "1", value: 1 },
+          { label: "7", value: 7 },
+          { label: "19", value: 19 },
+          { label: "37", value: 37 },
+          { label: "61", value: 61 },
+          { label: "91", value: 91 },
+        ]}
       />
 
       <InputField
