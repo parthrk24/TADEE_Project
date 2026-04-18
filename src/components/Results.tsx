@@ -132,7 +132,7 @@ ${line}
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "transmission_line_report.txt";
+    a.download = "transmission_line_report.doc";
     a.click();
     URL.revokeObjectURL(url);
   }
