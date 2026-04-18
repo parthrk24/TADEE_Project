@@ -383,6 +383,7 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
     abcd,
     sendingVoltage,
     sendingCurrent: Is,
+    receivingCurrent: Ir,
     chargingCurrent,
     voltageRegulation: VR,
     powerLoss,

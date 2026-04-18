@@ -58,7 +58,7 @@ export interface TransmissionResults {
   // Sending end
   sendingVoltage: ComplexNumber; // kV (line-to-line)
   sendingCurrent: ComplexNumber; // A
-
+  receivingCurrent: ComplexNumber;
   // Charging current
   chargingCurrent: ComplexNumber; // A
 

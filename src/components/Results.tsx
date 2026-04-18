@@ -75,14 +75,15 @@ function PhasorDiagram({ results }: { results: TransmissionResults }) {
     results.sendingVoltage.re,
   );
 
-  // Ir approximated from sendingCurrent (no receivingCurrent in results type)
-  const irAng = Math.atan2(
+  const isAng = Math.atan2(
     results.sendingCurrent.im,
     results.sendingCurrent.re,
   );
 
-  // Is slightly leads Ir due to line charging capacitance
-  const isAng = irAng + 0.12;
+  const irAng = Math.atan2(
+    results.receivingCurrent.im,
+    results.receivingCurrent.re,
+  );
 
   const iScale = scale * 0.65;
 
