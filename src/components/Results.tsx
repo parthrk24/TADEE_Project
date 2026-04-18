@@ -2,9 +2,9 @@
 "use client";
 
 import { useTransmission } from "@/context/TransmissionContext";
-import { ComplexNumber } from "@/types/transmission";
-import { formatPolar } from "@/lib/calculations";
 
+import { formatPolar } from "@/lib/calculations";
+import { TransmissionResults } from "@/types/transmission";
 import {
   Document,
   Packer,
@@ -61,6 +61,230 @@ function Section({
   );
 }
 
+function PhasorDiagram({ results }: { results: TransmissionResults }) {
+  const cx = 250,
+    cy = 210,
+    scale = 160;
+
+  // Vr is the reference phasor at 0°
+  const vrAng = 0;
+
+  // Vs angle from its complex components
+  const vsAng = Math.atan2(
+    results.sendingVoltage.im,
+    results.sendingVoltage.re,
+  );
+
+  // Ir approximated from sendingCurrent (no receivingCurrent in results type)
+  const irAng = Math.atan2(
+    results.sendingCurrent.im,
+    results.sendingCurrent.re,
+  );
+
+  // Is slightly leads Ir due to line charging capacitance
+  const isAng = irAng + 0.12;
+
+  const iScale = scale * 0.65;
+
+  function tip(angle: number, mag: number) {
+    return {
+      x: cx + mag * Math.cos(angle),
+      y: cy - mag * Math.sin(angle),
+    };
+  }
+
+  const phasors = [
+    {
+      tip: tip(vrAng, scale),
+      angle: vrAng,
+      color: "#3B8BD4",
+      label: "Vr",
+      dashed: false,
+    },
+    {
+      tip: tip(vsAng, scale),
+      angle: vsAng,
+      color: "#7F77DD",
+      label: "Vs",
+      dashed: false,
+    },
+    {
+      tip: tip(irAng, iScale),
+      angle: irAng,
+      color: "#1D9E75",
+      label: "Ir",
+      dashed: true,
+    },
+    {
+      tip: tip(isAng, iScale),
+      angle: isAng,
+      color: "#D85A30",
+      label: "Is",
+      dashed: true,
+    },
+  ];
+
+  function deg(rad: number) {
+    return ((rad * 180) / Math.PI).toFixed(1) + "°";
+  }
+
+  function labelPos(angle: number, tipX: number, tipY: number) {
+    const dx = Math.cos(angle) >= 0 ? 8 : -30;
+    const dy = Math.sin(angle) >= 0 ? -8 : 16;
+    return { x: tipX + dx, y: tipY + dy };
+  }
+
+  return (
+    <Section title="Phasor Diagram">
+      <div className="py-2">
+        <svg
+          width="100%"
+          viewBox="0 0 580 420"
+          role="img"
+          aria-label="Phasor diagram with Vr as reference"
+        >
+          <defs>
+            {phasors.map(({ color, label }) => (
+              <marker
+                key={label}
+                id={`arrow-${label}`}
+                viewBox="0 0 10 10"
+                refX="8"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path
+                  d="M2 1L8 5L2 9"
+                  fill="none"
+                  stroke={color}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </marker>
+            ))}
+          </defs>
+
+          {/* Axes */}
+          <line
+            x1="40"
+            y1={cy}
+            x2="430"
+            y2={cy}
+            stroke="#ffffff20"
+            strokeWidth="0.8"
+            strokeDasharray="4 3"
+          />
+          <line
+            x1={cx}
+            y1="30"
+            x2={cx}
+            y2="390"
+            stroke="#ffffff20"
+            strokeWidth="0.8"
+            strokeDasharray="4 3"
+          />
+          <text
+            fontSize="11"
+            x="434"
+            y={cy + 4}
+            fill="#ffffff50"
+            fontFamily="sans-serif"
+          >
+            Re
+          </text>
+          <text
+            fontSize="11"
+            x={cx + 4}
+            y="26"
+            fill="#ffffff50"
+            fontFamily="sans-serif"
+          >
+            Im
+          </text>
+
+          {/* Phasors */}
+          {phasors.map(({ tip, angle, color, label, dashed }) => {
+            const lp = labelPos(angle, tip.x, tip.y);
+            return (
+              <g key={label}>
+                <line
+                  x1={cx}
+                  y1={cy}
+                  x2={tip.x}
+                  y2={tip.y}
+                  stroke={color}
+                  strokeWidth={dashed ? 2 : 2.5}
+                  strokeDasharray={dashed ? "6 3" : undefined}
+                  markerEnd={`url(#arrow-${label})`}
+                />
+                <text
+                  fontSize="13"
+                  fontWeight="500"
+                  x={lp.x}
+                  y={lp.y}
+                  fill={color}
+                  fontFamily="sans-serif"
+                >
+                  {label}
+                </text>
+                <text
+                  fontSize="10"
+                  x={lp.x}
+                  y={lp.y + 14}
+                  fill={color}
+                  fontFamily="sans-serif"
+                >
+                  {deg(angle)}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Legend */}
+          {phasors.map(({ color, label, dashed }, i) => (
+            <g key={label}>
+              <line
+                x1="450"
+                y1={70 + i * 24}
+                x2="475"
+                y2={70 + i * 24}
+                stroke={color}
+                strokeWidth={dashed ? 2 : 2.5}
+                strokeDasharray={dashed ? "6 3" : undefined}
+                markerEnd={`url(#arrow-${label})`}
+              />
+              <text
+                fontSize="11"
+                x="480"
+                y={74 + i * 24}
+                fill="#ffffffaa"
+                fontFamily="sans-serif"
+              >
+                {label}
+                {label === "Vr" ? " (ref)" : ""}
+              </text>
+            </g>
+          ))}
+
+          <text
+            fontSize="10"
+            x="250"
+            y="410"
+            textAnchor="middle"
+            fill="#ffffff40"
+            fontFamily="sans-serif"
+          >
+            Vr as reference (0°) · dashed = current phasors
+          </text>
+        </svg>
+      </div>
+    </Section>
+  );
+}
+
 export default function Results() {
   const { state, setStep, clearResults } = useTransmission();
   const { results, inputs } = state;
@@ -68,8 +292,6 @@ export default function Results() {
   if (!results) return null;
 
   const r = results;
-
-  // ── Generate report lines ────────────────────────────────────
 
   async function downloadReport() {
     const noBorder = {
@@ -229,6 +451,7 @@ export default function Results() {
     a.click();
     URL.revokeObjectURL(url);
   }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
@@ -324,6 +547,9 @@ export default function Results() {
           unit="MW"
         />
       </Section>
+
+      {/* Phasor Diagram */}
+      <PhasorDiagram results={r} />
 
       {/* Credit */}
       <div
