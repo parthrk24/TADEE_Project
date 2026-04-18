@@ -115,7 +115,7 @@ ${line}
 
 6.  Sending End Voltage  : ${fmt(r.sendingVoltage, 4)} kV
 7.  Sending End Current  : ${fmt(r.sendingCurrent, 4)} A
-8.  Charging Current     : ${fmt(r.chargingCurrent, 4)} A
+8.  Charging Current     : ${fmtComplex(r.chargingCurrent)} A
 9.  Voltage Regulation   : ${fmt(r.voltageRegulation, 4)} %
 10. Power Loss           : ${fmt(r.powerLoss, 4)} MW
 11. Transmission Eff.    : ${fmt(r.efficiency, 4)} %
@@ -199,7 +199,7 @@ ${line}
         />
         <ResultRow
           label="Charging Current"
-          value={fmt(r.chargingCurrent)}
+          value={fmtComplex(r.chargingCurrent)}
           unit="A"
         />
       </Section>
@@ -255,7 +255,7 @@ ${line}
                    font-semibold text-sm hover:bg-purple-500 transition
                    shadow-lg shadow-purple-500/30"
       >
-        ⬇ Download Report (.txt)
+        ⬇ Download Report (.doc)
       </button>
     </div>
   );

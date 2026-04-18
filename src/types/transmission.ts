@@ -60,7 +60,7 @@ export interface TransmissionResults {
   sendingCurrent: number; // A
 
   // Charging current
-  chargingCurrent: number; // A
+  chargingCurrent: ComplexNumber; // A
 
   // Performance
   voltageRegulation: number; // %

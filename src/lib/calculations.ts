@@ -8,7 +8,9 @@ import {
 } from "@/types/transmission";
 
 // ── Complex Number Math ──────────────────────────────────────────
-
+function czero(a: number): ComplexNumber {
+  return { re: 0, im: 0 };
+}
 function cadd(a: ComplexNumber, b: ComplexNumber): ComplexNumber {
   return { re: a.re + b.re, im: a.im + b.im };
 }
@@ -214,7 +216,7 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
 
   // ── 5. Line parameters ─────────────────────────────────────────
   // Resistance per phase (parallel sub-conductors)
-  const R_per_km = subConductorResistance / numSubConductors; // Ω/km
+  const R_per_km = subConductorResistance * numSubConductors; // Ω/km
   const R_total = R_per_km * lineLength; // Ω
 
   const L_total = inductancePerKm * lineLength; // H
@@ -321,8 +323,7 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
 
   // Charging current (nominal-pi / distributed only)
   // Ic = Y/2 * Vs  (sending end)
-  const Y_half: ComplexNumber = { re: Y.re / 2, im: Y.im / 2 };
-  const chargingCurrent = lineModel === "short" ? 0 : cmag(cmul(Y_half, Vs));
+  const chargingCurrent = lineModel === "short" ? czero(0) : cmul(abcd.C, Vr);
 
   // Voltage regulation
   const VR = ((Vs_mag_phase - Vr_mag) / Vr_mag) * 100;
