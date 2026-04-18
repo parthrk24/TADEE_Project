@@ -65,6 +65,32 @@ function csqrt(a: ComplexNumber): ComplexNumber {
   return { re: mag * Math.cos(ang), im: mag * Math.sin(ang) };
 }
 
+// ── Polar Format Utilities ───────────────────────────────────────
+
+export function toPolar(c: ComplexNumber): {
+  magnitude: number;
+  angle: number;
+} {
+  return {
+    magnitude: cmag(c),
+    angle: cang(c),
+  };
+}
+
+/**
+ * Formats a complex number as a polar string: "123.4500 ∠ 30.00°"
+ * @param c - Complex number
+ * @param magDecimals - Decimal places for magnitude (default 4)
+ * @param angDecimals - Decimal places for angle (default 2)
+ */
+export function formatPolar(
+  c: ComplexNumber,
+  magDecimals = 4,
+  angDecimals = 2,
+): string {
+  return `${cmag(c).toFixed(magDecimals)} ∠ ${cang(c).toFixed(angDecimals)}°`;
+}
+
 // ── GMR Calculation ──────────────────────────────────────────────
 // For stranded ACSR conductor:
 // Overall radius of sub-conductor = (2n-1) * r_strand  where n = number of layers

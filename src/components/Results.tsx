@@ -3,14 +3,10 @@
 
 import { useTransmission } from "@/context/TransmissionContext";
 import { ComplexNumber } from "@/types/transmission";
+import { formatPolar } from "@/lib/calculations";
 
 function fmt(n: number, decimals = 4): string {
   return isNaN(n) ? "—" : n.toFixed(decimals);
-}
-
-function fmtComplex(c: ComplexNumber): string {
-  const sign = c.im >= 0 ? "+" : "-";
-  return `${fmt(c.re)} ${sign} j${fmt(Math.abs(c.im))}`;
 }
 
 function ResultRow({
@@ -103,14 +99,14 @@ ${line}
 4.  Capacitive Reactance : ${fmt(r.capacitiveReactance, 4)} Ω (per phase)
 
 5.  ABCD Parameters:
-    A = ${fmtComplex(r.abcd.A)}
-    B = ${fmtComplex(r.abcd.B)} Ω
-    C = ${fmtComplex(r.abcd.C)} S
-    D = ${fmtComplex(r.abcd.D)}
+    A = ${formatPolar(r.abcd.A)}
+    B = ${formatPolar(r.abcd.B)} Ω
+    C = ${formatPolar(r.abcd.C, 6, 4)} S
+    D = ${formatPolar(r.abcd.D)}
 
-6.  Sending End Voltage  : ${fmtComplex(r.sendingVoltage)} kV (line to line)
-7.  Sending End Current  : ${fmtComplex(r.sendingCurrent)} A
-8.  Charging Current     : ${fmtComplex(r.chargingCurrent)} A (per phase)
+6.  Sending End Voltage  : ${formatPolar(r.sendingVoltage, 4, 2)} kV (line to line)
+7.  Sending End Current  : ${formatPolar(r.sendingCurrent, 4, 2)} A
+8.  Charging Current     : ${formatPolar(r.chargingCurrent, 4, 2)} A (per phase)
 9.  Voltage Regulation   : ${fmt(r.voltageRegulation, 4)} %
 10. Total Power Loss           : ${fmt(r.powerLoss, 4)} MW
 11. Transmission Efficiency    : ${fmt(r.efficiency, 4)} %
@@ -174,27 +170,27 @@ ${line}
 
       {/* ABCD Parameters */}
       <Section title="ABCD Parameters">
-        <ResultRow label="A" value={fmtComplex(r.abcd.A)} />
-        <ResultRow label="B" value={fmtComplex(r.abcd.B)} unit="Ω" />
-        <ResultRow label="C" value={fmtComplex(r.abcd.C)} unit="S" />
-        <ResultRow label="D" value={fmtComplex(r.abcd.D)} />
+        <ResultRow label="A" value={formatPolar(r.abcd.A)} />
+        <ResultRow label="B" value={formatPolar(r.abcd.B)} unit="Ω" />
+        <ResultRow label="C" value={formatPolar(r.abcd.C, 6, 4)} unit="S" />
+        <ResultRow label="D" value={formatPolar(r.abcd.D)} />
       </Section>
 
       {/* Sending End */}
       <Section title="Sending End">
         <ResultRow
           label="Sending End Voltage"
-          value={fmtComplex(r.sendingVoltage)}
+          value={formatPolar(r.sendingVoltage, 4, 2)}
           unit="kV"
         />
         <ResultRow
           label="Sending End Current"
-          value={fmtComplex(r.sendingCurrent)}
+          value={formatPolar(r.sendingCurrent, 4, 2)}
           unit="A"
         />
         <ResultRow
           label="Charging Current"
-          value={fmtComplex(r.chargingCurrent)}
+          value={formatPolar(r.chargingCurrent, 4, 2)}
           unit="A"
         />
       </Section>
@@ -227,6 +223,7 @@ ${line}
           unit="MW"
         />
       </Section>
+
       {/* Credit */}
       <div
         className="rounded-lg bg-purple-500/10 border border-purple-500/20
@@ -243,6 +240,7 @@ ${line}
         </p>
         <p className="text-xs text-purple-200/70">3. Pranav Jha — 107124080</p>
       </div>
+
       {/* Download */}
       <button
         onClick={downloadReport}
