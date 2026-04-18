@@ -20,7 +20,6 @@ function validateStep(
 ): string | null {
   switch (step) {
     case 1:
-      if (inputs.numStrands < 1) return "Number of strands must be at least 1.";
       if (inputs.strandDiameter <= 0)
         return "Strand diameter must be greater than 0.";
       if (inputs.subConductorResistance <= 0)

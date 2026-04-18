@@ -9,7 +9,7 @@ import {
 
 // ── Complex Number Math ──────────────────────────────────────────
 function czero(a: number): ComplexNumber {
-  return { re: 0, im: 0 };
+  return { re: a, im: 0 };
 }
 function cadd(a: ComplexNumber, b: ComplexNumber): ComplexNumber {
   return { re: a.re + b.re, im: a.im + b.im };
@@ -320,14 +320,14 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
   // ── 8. Results ─────────────────────────────────────────────────
   const Vs_mag_phase = cmag(Vs); // phase voltage (V)
   const Vs_line_kV = (Vs_mag_phase * Math.sqrt(3)) / 1000; // line voltage (kV)
+  const sendingVoltage = cdiv(cmul(Vs, czero(Math.sqrt(3))), czero(1000));
   const Is_mag = cmag(Is); // sending current (A)
-
+  const Vs_by_A = cmag(Vs) / cmag(abcd.A);
   // Charging current (nominal-pi / distributed only)
-  // Ic = Y/2 * Vs  (sending end)
   const chargingCurrent = lineModel === "short" ? czero(0) : cmul(abcd.C, Vr);
 
   // Voltage regulation
-  const VR = ((Vs_mag_phase - Vr_mag) / Vr_mag) * 100;
+  const VR = ((Vs_by_A - Vr_mag) / Vr_mag) * 100;
 
   // Power loss
   const P_send =
@@ -355,8 +355,8 @@ export function calculate(inputs: TransmissionInputs): TransmissionResults {
     inductiveReactance: XL,
     capacitiveReactance: XC,
     abcd,
-    sendingVoltage: Vs_line_kV,
-    sendingCurrent: Is_mag,
+    sendingVoltage,
+    sendingCurrent: Is,
     chargingCurrent,
     voltageRegulation: VR,
     powerLoss,

@@ -56,8 +56,8 @@ export interface TransmissionResults {
   abcd: ABCDParams;
 
   // Sending end
-  sendingVoltage: number; // kV (line-to-line)
-  sendingCurrent: number; // A
+  sendingVoltage: ComplexNumber; // kV (line-to-line)
+  sendingCurrent: ComplexNumber; // A
 
   // Charging current
   chargingCurrent: ComplexNumber; // A

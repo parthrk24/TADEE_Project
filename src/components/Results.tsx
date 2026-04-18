@@ -64,11 +64,6 @@ export default function Results() {
   // ── Generate report text ─────────────────────────────────────
   function generateReport(): string {
     const line = "─".repeat(55);
-    const date = new Date().toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
 
     return `
 ${line}
@@ -81,7 +76,7 @@ Developed by:
   2. Kumar Shubangam Verma — 107124056
   3. Pranav Jha — 107124080
 
-
+Submitted on: 18-04-2026
 ${line}
 
 INPUT PARAMETERS
@@ -104,8 +99,8 @@ ${line}
 
 1.  Inductance/phase/km  : ${fmt(r.inductancePerKm, 6)} H/km
 2.  Capacitance/phase/km : ${fmt(r.capacitancePerKm, 6)} F/km
-3.  Inductive Reactance  : ${fmt(r.inductiveReactance, 4)} Ω
-4.  Capacitive Reactance : ${fmt(r.capacitiveReactance, 4)} Ω
+3.  Inductive Reactance  : ${fmt(r.inductiveReactance, 4)} Ω (per phase)
+4.  Capacitive Reactance : ${fmt(r.capacitiveReactance, 4)} Ω (per phase)
 
 5.  ABCD Parameters:
     A = ${fmtComplex(r.abcd.A)}
@@ -113,12 +108,12 @@ ${line}
     C = ${fmtComplex(r.abcd.C)} S
     D = ${fmtComplex(r.abcd.D)}
 
-6.  Sending End Voltage  : ${fmt(r.sendingVoltage, 4)} kV
-7.  Sending End Current  : ${fmt(r.sendingCurrent, 4)} A
-8.  Charging Current     : ${fmtComplex(r.chargingCurrent)} A
+6.  Sending End Voltage  : ${fmtComplex(r.sendingVoltage)} kV (line to line)
+7.  Sending End Current  : ${fmtComplex(r.sendingCurrent)} A
+8.  Charging Current     : ${fmtComplex(r.chargingCurrent)} A (per phase)
 9.  Voltage Regulation   : ${fmt(r.voltageRegulation, 4)} %
-10. Power Loss           : ${fmt(r.powerLoss, 4)} MW
-11. Transmission Eff.    : ${fmt(r.efficiency, 4)} %
+10. Total Power Loss           : ${fmt(r.powerLoss, 4)} MW
+11. Transmission Efficiency    : ${fmt(r.efficiency, 4)} %
 12. Surge Impedance      : ${fmt(r.surgeImpedance, 4)} Ω
 13. SIL                  : ${fmt(r.surgeImpedanceLoading, 4)} MW
 
@@ -189,12 +184,12 @@ ${line}
       <Section title="Sending End">
         <ResultRow
           label="Sending End Voltage"
-          value={fmt(r.sendingVoltage)}
+          value={fmtComplex(r.sendingVoltage)}
           unit="kV"
         />
         <ResultRow
           label="Sending End Current"
-          value={fmt(r.sendingCurrent)}
+          value={fmtComplex(r.sendingCurrent)}
           unit="A"
         />
         <ResultRow
