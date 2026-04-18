@@ -111,8 +111,8 @@ export default function Results() {
         {
           children: [
             textPara(divider),
-            textPara("  TRANSMISSION LINE ANALYSIS REPORT", true),
-            textPara("  EEPC17 - NIT Tiruchirappalli"),
+            textPara("TRANSMISSION LINE ANALYSIS REPORT", true),
+            textPara("EEPC17 - NIT Tiruchirappalli"),
             textPara(divider),
             textPara(""),
             textPara("Developed by:"),
@@ -121,9 +121,11 @@ export default function Results() {
             textPara("  3. Pranav Jha \u2014 107124080"),
             textPara(""),
             textPara("Submitted on: 18-04-2026"),
+            textPara(""),
+            textPara(divider),
+            textPara("INPUT PARAMETERS", true),
             textPara(divider),
             textPara(""),
-            textPara("INPUT PARAMETERS", true),
             new Table({
               width: { size: 100, type: WidthType.PERCENTAGE },
               borders: noBorder,
@@ -179,6 +181,7 @@ export default function Results() {
                   "4.  Capacitive Reactance",
                   `${fmt(r.capacitiveReactance, 4)} \u03A9 (per phase)`,
                 ),
+                tableRow("5.  ABCD Parameters", ""),
                 tableRow("    A", `${formatPolar(r.abcd.A)}`),
                 tableRow("    B", `${formatPolar(r.abcd.B)} \u03A9`),
                 tableRow("    C", `${formatPolar(r.abcd.C, 6, 4)} S`),
